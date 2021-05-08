@@ -1,0 +1,359 @@
+/* 原理 先將兩張疊再一起 將其中一張轉180度 在整個一起轉180度 達到翻牌的效果 */
+html,
+body {
+  height: 100%;
+}
+body {
+  font-family: 'Game of Thrones';
+  font-weight: normal;
+  font-style: normal;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+/* 遊戲區域 */
+#game {
+  width: 100%;
+  height: 100%;
+  background: url(./background/3284872.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* 遊戲規則 */
+.rules {
+  position: fixed;
+  left: 35%;
+  top: 10%;
+  text-align: center;
+  color: gold;
+  font-size: 18px;
+}
+/* 成員牌組區 */
+/* display: inline-flex 要寫在外層 */
+.container-m {
+  width: 40%;
+  position: fixed;
+  left: 18%;
+  top: 20%;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-self: center;
+  flex-wrap: wrap;
+}
+.card-m {
+  width: 90px;
+  height: 130px;
+  position: relative;
+  /* 設定子元素(下面0層)在 3D 空間內 */
+  transform-style: preserve-3d;
+  /* 翻牌動畫的速度 */
+  transition: transform 1s;
+  margin: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+/* 家徽牌組區 */
+.container-s {
+  width: 40%;
+  position: fixed;
+  left: 59%;
+  top: 20%;
+  display: inline-flex;
+  justify-content: flex-start;
+  align-self: center;
+  flex-wrap: wrap;
+}
+.card-s {
+  width: 90px;
+  height: 130px;
+  position: relative;
+  /* 設定子元素(下面0層)在 3D 空間內 */
+  transform-style: preserve-3d;
+  /* 翻牌動畫的速度 */
+  transition: transform 1s;
+  margin: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+/* 卡片正反面 */
+.card-front {
+  width: 100%;
+  height: 100%;
+  background-image: url(./members/1m.jpg);
+  background-position: center;
+  background-repeat: no-repeat;
+  /* contain 等比縮放填滿 */
+  background-size: cover;
+  position: absolute;
+  transform: rotateY(180deg);
+  border-radius: 10px;
+}
+.card-back {
+  width: 100%;
+  height: 100%;
+  background-image: url(./back/back.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: absolute;
+  /* 翻過來後隱藏背面 */
+  /* mac 系統要加 win 系統不用加 */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 10px;
+}
+/* 翻牌 */
+.card-open {
+  transform: rotateY(180deg);
+}
+/* 開始 下一關 按鈕 */
+.container-btn1 {
+  position: fixed;
+}
+/* 開始按鈕 */
+#btn-start {
+  background-image: url(./start/start.png);
+  background-size: cover;
+  background-position: center center;
+  width: 150px;
+  height: 80px;
+  border-radius: 10px;
+  box-shadow: 0 5px #999;
+  cursor: pointer;
+  position: fixed;
+}
+#btn-start:hover {
+  filter: drop-shadow(5px 5px 5px white);
+}
+#btn-start:active {
+  transform: translateY(4px);
+  box-shadow: 0 3px #666;
+}
+/* 下一關按鈕 */
+#btn-next {
+  font-family: 'Game of Thrones';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  padding: 25px 25px;
+  color: #03f40f;
+  font-size: 24px;
+  letter-spacing: 5px;
+  text-decoration: none;
+  -webkit-box-reflect: below 1px linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+  /* filter: hue-rotate 依照角度換顏色 */
+  filter: hue-rotate(200deg);
+  transition: 0.5s;
+  /* 定位點 */
+  position: fixed;
+  left: 40%;
+  top: 70%;
+  background: black;
+  opacity: 0.8;
+}
+#btn-next:hover {
+  color: #03f40f;
+  background-color: rgba(0, 240, 15, 0.5);
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5), 0px 0px 5px rgba(3, 244, 15, 1), 0px 0px 25px rgba(3, 244, 15, 1);
+
+  box-shadow: 0 0 5px rgba(3, 244, 15, 1), 0 0 5px rgba(3, 244, 15, 0.8), 0 0 5px rgba(3, 244, 15, 0.5), 0 0 5px rgba(3, 244, 15, 0.3);
+
+  filter: inherit;
+  filter: initial;
+  filter: unset;
+  filter: saturate(30%);
+  filter: blur(0.8px);
+}
+
+#btn-next span {
+  position: absolute;
+}
+
+/* 上邊， 滑鼠滑過去的時候 第一個span要做動作 */
+#btn-next span:nth-child(1) {
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, #03f40f, #03f40f);
+  animation: a1 1.5s forwards infinite;
+}
+
+@keyframes a1 {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+/* 右邊， 滑鼠滑過去的時候 第二個span要做動作 */
+#btn-next span:nth-child(2) {
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(180deg, #03f40f, #03f40f);
+  animation: a2 2s forwards infinite;
+}
+
+@keyframes a2 {
+  0% {
+    height: 0;
+  }
+
+  100% {
+    height: 100%;
+  }
+}
+
+/* 下邊，滑鼠滑過去的時候 第三個span要做動作 */
+#btn-next span:nth-child(3) {
+  right: 0;
+  bottom: 0;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(270deg, #03f40f, #03f40f);
+  animation: a1 2.5s forwards infinite;
+}
+
+@keyframes a3 {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+/* 左邊， 滑鼠滑過去的時候 第四個span要做動作 */
+#btn-next span:nth-child(4) {
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(0deg, #03f40f, #03f40f);
+  animation: a4 3s forwards infinite;
+}
+
+@keyframes a4 {
+  0% {
+    height: 0;
+  }
+
+  100% {
+    height: 100%;
+  }
+}
+/* 作弊按鈕 */
+.container-btn2 {
+  position: fixed;
+}
+/* 作弊按鈕 */
+#btn-cheat {
+  cursor: pointer;
+  position: fixed;
+  left: 77%;
+  background-color: white;
+  color: black;
+  border: 2px solid #4caf50;
+  border-radius: 5px;
+  padding: 5px;
+}
+#btn-cheat span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+}
+#btn-cheat span:after {
+  content: '»';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.5s;
+}
+#btn-cheat:hover span {
+  padding-right: 13px;
+}
+#btn-cheat:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+#btn-cheat:hover {
+  background-color: #4caf50;
+  color: white;
+  transition-duration: 0.5s;
+}
+/* 回復作弊按鈕 */
+#btn-recover {
+  cursor: pointer;
+  position: fixed;
+  left: 89%;
+  background-color: white;
+  color: black;
+  border: 2px solid #af4c7a;
+  border-radius: 5px;
+  padding: 5px;
+}
+#btn-recover span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.5s;
+}
+#btn-recover span:after {
+  content: '»';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.5s;
+}
+#btn-recover:hover span {
+  padding-right: 13px;
+}
+#btn-recover:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+#btn-recover:hover {
+  background-color: #af4c7a;
+  color: white;
+  transition-duration: 0.5s;
+}
+/* 遊戲資訊區 */
+.container-menu {
+  position: fixed;
+  top: 20%;
+  text-shadow: 5px 5px 10px grey;
+  color: lightgrey;
+  letter-spacing: 2px;
+}
+#stage {
+  position: relative;
+}
+
+.mem {
+  position: absolute;
+  left: 18.5%;
+  top: 10%;
+  color: lightcoral;
+  text-shadow: 5px 5px 10px lightcoral;
+}
+
+.sil {
+  position: absolute;
+  left: 60%;
+  top: 9%;
+  color: lightgreen;
+  text-shadow: 5px 5px 10px lightgreen;
+}

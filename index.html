@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- 字體 -->
+    <link rel="stylesheet" href="./font/game-of-thrones/GameofThrones.css">
+
+    <!-- CSS 樣式 -->
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <!--jQ -->
+    <script src="./jquery-3.6.0.min.js"></script>
+
+    <!-- sweetalert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+    <!-- 彩帶 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+
+    <!-- 動畫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <!-- 遊戲區域 -->
+    <div id="game">
+        <!-- 遊戲規則 -->
+        <div class="rules">遊戲規則說明:<br><br>歡迎來到權力遊戲的配對遊戲<br><br>考驗你對於家族成員及家徽的認識程度<br><br>一共有三個配對關卡<br><br>每一關分別有四 六
+            八個成員和家徽<br><br>將左邊的成員和右邊的家徽配對起來吧!<br><br>每一關分別有三十 六十
+            九十秒的時間<br><br>每一關配對完成將會停止計時並根據剩餘時間計分<br><br>剩餘時間多一秒分數即多一分<br><br>最高分者可以輸入姓名顯示在最高分榜上<br><br>準備好就按左上角的按鈕開始遊戲吧!
+        </div>
+
+        <!-- 成員牌 -->
+        <div class="container-m"></div>
+
+        <!-- 家徽牌 -->
+        <div class="container-s"></div>
+
+        <!-- 開始下一關按鈕 -->
+        <div class="container-btn1">
+            <input type="button" value="" id="btn-start">
+            <button id="btn-next">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                Next Stage
+            </button>
+        </div>
+
+        <!-- 作弊 回復按鈕 -->
+        <div class="container-btn2">
+            <button id="btn-cheat"><span>好孩子不要點我</span></button>
+            <button id="btn-recover"><span>壞孩子不要點我</span></button>
+        </div>
+
+        <!-- 遊戲資訊 -->
+        <div class="container-menu">
+            <p id="stage">Stage：<span id="text-stage">-</span></p>
+            <p>Time：<span id="text-time">-</span> Sec</p>
+            <p>Score：<span id="text-score">-</span> </p>
+            <br><br><br><br><br><br><br>
+            <p id="wr">World Records：</p>
+            <p>Player：<span id="highscore-player">-</span></p>
+            <p>Score：<span id="highscore-score">-</span> </p>
+        </div>
+        <div class="container-ms">
+            <p class="mem">members:</p>
+            <p class="sil">sigils:</p>
+        </div>
+    </div>
+
+    <script>
+        let countdown = 30
+
+        // 倒數計時
+        // 倒數計時 因為 clearInterval 會把變數也一起清掉 所以設定 timer=0
+        let timer = 0
+        let stage = 1
+        let score = 0
+
+        // 設定一個空的 JSON 放 name score
+        let highscore = { name: '', score: 0 }
+
+        // 定義一個變數 抓儲存在網頁 localStorage 的資料
+        const highStorage = JSON.parse(localStorage.getItem('card'))
+
+        // 若抓出來的資料 的資料不是空的
+        if (highStorage !== null) {
+
+            // 將最高分紀錄改寫
+            highscore = highStorage
+
+            // 改寫顯示的最高分數和使用者
+            $('#highscore-player').text(`${highscore.name}`)
+            $('#highscore-score').text(`${highscore.score}`)
+        }
+
+        // 彩帶效果
+        const con = () => {
+            var count = 200;
+            var defaults = {
+                origin: { y: 0.7 }
+            };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, {
+                spread: 26,
+                startVelocity: 55,
+            });
+            fire(0.2, {
+                spread: 60,
+            });
+            fire(0.35, {
+                spread: 100,
+                decay: 0.91,
+                scalar: 0.8
+            });
+            fire(0.1, {
+                spread: 120,
+                startVelocity: 25,
+                decay: 0.92,
+                scalar: 1.2
+            });
+            fire(0.1, {
+                spread: 120,
+                startVelocity: 45,
+            });
+        }
+
+        // 一開始隱藏介面只顯示開始按鈕和規則
+        $('#btn-next').hide()
+
+        $('.container-menu').hide()
+
+        $('.container-ms').hide()
+
+        $('.container-btn2').hide()
+        // 點擊作弊按鈕改透明度和字
+        $('#btn-cheat').click(function () {
+            $('.card-back').css('opacity', '0.3');
+            $('#btn-cheat').text('真拿你沒辦法(´･ω･`)')
+        })
+        // 點擊作弊回復按鈕改透明度和字
+        $('#btn-recover').click(function () {
+            $('.card-back').css('opacity', '1');
+            $('#btn-recover').text('你好棒棒٩(^ᴗ^)۶')
+        })
+
+        // 點擊開始按鈕要做的事--------------------------------------------------------------------------------
+        $('#btn-start').click(function () {
+
+            // 關閉開始按鈕
+            $(this).attr('disabled', true)
+
+            // 重置參數
+            score = 0
+            $('#text-score').text(score)
+            stage = 1
+            $('#text-stage').text(stage)
+
+            // 底下 startStage 的 function 跑完之後在看要傳第幾關的 function 進去
+            // 呼叫 function
+            startStage(stage)
+        })
+
+        // 點選開始按鈕要跑的 function
+        const startStage = (stage) => {
+
+            $('#text-score').text(score)
+
+            $('#text-stage').text(stage)
+
+            $('#text-time').text(countdown)
+
+            // 先清除已經完成的組數卡片
+            $('.card-clear').remove()
+
+            // 遊戲規則隱藏 遊戲介面顯示
+            $('.rules').remove()
+
+            $('.container-menu').show()
+
+            $('.container-ms').show()
+
+            $('.container-btn2').show()
+            // 進入遊戲換背景
+            $('#game').css({ background: 'url(./background/phhsqwwhhny.jpeg)', backgroundSize: 'cover', backgroundRepeat: ' no - repeat' })
+
+            // 關卡時間=關卡數*30
+            countdown = stage * 30
+
+            // 卡片的張數
+            const cards = stage * 2 + 2
+            for (let i = 0; i < cards; i++) {
+                $('.container-m').append(
+                    `
+                    <div class="card-m">
+                        <div class="card-front"></div>
+                        <div class="card-back"></div>
+                    </div>
+                    `)
+            }
+
+            for (let i = 0; i < cards; i++) {
+                $('.container-s').append(
+                    `
+                    <div class="card-s">
+                        <div class="card-front"></div>
+                        <div class="card-back"></div>
+                    </div>
+                    `)
+            }
+
+            for (let i = 0; i < cards; i++) {
+                // 決定數字
+                // 算每一張牌的數字是什麼 用餘數+1來決定數字 
+                let number = (i % 8) + 1
+
+                // 根據找到的資料換牌
+                $('.card-m').eq(i).find('.card-front').css('background-image', `url(./members/${number}m.jpg)`)
+                $('.card-s').eq(i).find('.card-front').css('background-image', `url(./sigils/${number}s.jpg)`)
+
+                // https://www.w3schools.com/tags/att_global_data.asp 用 data 開頭+資料名稱
+                $('.card-m').eq(i).attr('data-card', number)
+                $('.card-s').eq(i).attr('data-card', number)
+
+                // 打散
+                // 隨機 0~卡片數 
+                let target1 = Math.floor(Math.random() * cards)
+                let target2 = Math.floor(Math.random() * cards)
+
+                // 將第隨機個卡片插入迴圈跑出來照順序的第1 2 3...張卡片後
+                $('.card-m').eq(target1).insertAfter($('.card-m').eq(i))
+                $('.card-s').eq(target2).insertAfter($('.card-s').eq(i))
+            }
+
+            // 倒數計時
+            timer = setInterval(() => {
+
+                // 過一秒秒數-1
+                countdown--
+
+                // 改顯示秒數
+                $('#text-time').text(countdown)
+
+                // 若秒數<=0 要做的事---------------------------------------------------------------------------
+                if (countdown <= 0) {
+
+                    $('.container-m').empty()
+                    $('.container-s').empty()
+
+                    clearInterval(timer)
+                    // 分數加總
+                    score += countdown
+                    $('#text-score').text(score)
+
+                    // 開放開始按鈕
+                    $('#btn-start').attr('disabled', false)
+
+                    // 隱藏下一關按鈕
+                    $('#btn-next').hide()
+
+                    // 跳出 sweetalert 視窗
+                    const swalWithBootstrapButtons = Swal.mixin({
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    })
+
+                    swalWithBootstrapButtons.fire({
+                        title: `時間到囉 你的分數是${score}`,
+                        text: "很可惜你並未完成配對 是否要在玩一次呢?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: '是',
+                        cancelButtonText: '否',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            swalWithBootstrapButtons.fire(
+                                '再來一局',
+                                '請點選左上角的按鈕開始新的遊戲!',
+                                'success'
+                            )
+                        } else if (
+                            /* Read more about handling dismissals below */
+                            result.dismiss === Swal.DismissReason.cancel
+                        ) {
+                            swalWithBootstrapButtons.fire(
+                                '遊戲終止',
+                                '感謝您的遊玩,期待您再度到訪',
+                                'warning'
+                            )
+                        }
+
+                    })
+                }
+            }, 1000);
+        }
+
+        // 點到卡片時要做的動作------------------------------------------------------------------------------------
+        // 因為卡片是後面出來用.append() 新增上去的 所以要用 .on 
+        $('#game').on('click', '.card-m,.card-s', function () {
+            // 作弊 回復按鈕回到初始狀態
+            $('#btn-cheat').text('好孩子不要點我')
+            $('#btn-recover').text('壞孩子不要點我')
+
+            // 限制最多只能翻兩張牌
+            if ($('.card-open').length < 2 && !$(this).hasClass('card-open')) {
+                $(this).addClass('card-open')
+            }
+
+            // 不能用 else if 因為要同時判斷
+            if ($('.card-open').length === 2) {
+                // 翻開兩張 若第一張牌(eq(0)) 的屬性值 data-card 和第二張牌(eq(0)) 的屬性值 data-card 一樣
+                if ($('.card-open').eq(0).attr('data-card') == $('.card-open').eq(1).attr('data-card')) {
+                    // 每翻到兩張一樣的 淡化並加一個 card-clear 的 class 用來計算翻對的組數 兩張一樣的一組
+                    $('.card-open').fadeTo(1000, 0).addClass('card-clear')
+                }
+
+                // 不管一不一樣 隔一秒都翻回來
+                setTimeout(() => {
+                    // 一秒鐘後取消翻牌的 class
+                    $('.card-open').removeClass('card-open')
+                }, 1000)
+            }
+
+            // 若翻對的組數(兩張一樣的一組)=卡片的張數(正反兩張疊在一張) 要做的事--------------------------------------
+            if ($('.card-clear').length == ($('.card-m').length + $('.card-s').length)) {
+                // 顯示下一關按鈕
+                $('#btn-next').show()
+                $('#btn-next').css({ animation: 'fadeInLeft 2.5s 1' });
+
+                // 倒數停止
+                clearInterval(timer)
+
+                // 設計三關 第三關結束後要做的事
+                if (stage == 3) {
+                    // 分數加總
+                    score += countdown
+                    $('#text-score').text(score)
+
+                    // 開放開始按鈕
+                    $('#btn-start').attr('disabled', false)
+
+                    // 隱藏下一關按鈕
+                    $('#btn-next').hide()
+
+                    // 噴彩帶
+                    con()
+
+                    // sweet alert
+                    const swalWithBootstrapButtons = Swal.mixin({
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                    })
+
+                    swalWithBootstrapButtons.fire({
+                        title: `時間到囉 你的分數是${score}`,
+                        text: "是否要在玩一次呢?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: '是',
+                        cancelButtonText: '否',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            swalWithBootstrapButtons.fire(
+                                '再來一局',
+                                '請點選左上角的按鈕開始新的遊戲!',
+                                'success'
+                            )
+                        } else if (
+                            /* Read more about handling dismissals below */
+                            result.dismiss === Swal.DismissReason.cancel
+                        ) {
+                            swalWithBootstrapButtons.fire(
+                                '遊戲終止',
+                                '感謝您的遊玩,期待您再度到訪',
+                                'warning'
+                            )
+                        }
+
+                    })
+                    // 遊戲結束後若目前分數>最高分
+                    if (score > highscore.score) {
+                        // 改掉最高分為目前分數
+                        highscore.score = score
+
+                        // 改掉使用者名稱
+                        highscore.name = prompt('最高分! 請輸入名字')
+
+                        // 若使用者名稱是空的
+                        if (highscore.name === null || highscore.name.length === 0) {
+                            highscore.name = 'None'
+                        }
+                        // 改掉顯示分數和使用者名稱(網頁上的元素)
+                        $('#highscore-player').text(`${highscore.name}`)
+                        $('#highscore-score').text(`${highscore.score}`)
+
+                        // 將最高分的紀錄存進網頁 localStorage.setItem(存 card 的資料在網頁中 關機後不會消失) value 必須是文字
+                        localStorage.setItem('card', JSON.stringify(highscore))
+                    }
+                    // 結束後分數歸0
+                    score = 0
+                    stage = 1
+                }
+            }
+        })
+
+        // 點下一關按鈕要做的事--------------------------------------------------------------------------------
+        $('#btn-next').click(function () {
+
+            // 關卡數+1
+            stage++
+
+            // 分數相加
+            score += countdown
+
+            // 改顯示分數
+            $('#text-score').text(score)
+
+            // 跑關卡數 function 
+            // 呼叫 function
+            startStage(stage)
+
+            // 下一關按鈕隱藏
+            $(this).hide()
+
+            // 關卡數變大並移動到畫面中間
+            $('#stage').animate({
+                left: '+=500px',
+                top: '+=250px',
+                fontSize: '50px',
+            }, 2000)
+            // 關卡數回到初始狀態
+            $('#stage').animate({
+                left: '-=500px',
+                top: '-=250px',
+                fontSize: '-=34px'
+            }, 2000)
+
+        })
+    </script>
+</body>
+
+</html>
